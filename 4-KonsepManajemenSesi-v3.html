@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <title>Konsep Manajemen Sesi Terautentikasi</title>
+    <style>
+        * {
+            margin: 0;
+            box-sizing: border-box;
+            font-family: Inter, sans-serif;
+        }
+
+        :root {
+            --mainCard: #1e293b;
+            --borderCard: #334155;
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --accent: #38bdf8;
+            --mainBodyBg: #0f172a;
+            --ok: #4ade80;
+            --warn: #fbbf24;
+            --bad: #f87171;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        .hero {
+            background-image: linear-gradient(135deg, #0c4a6e, #0f172a);
+            color: white;
+            padding: 70px 24px;
+            text-align: center;
+        }
+
+        .subHead1 {
+            margin-top: 20px;
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        .subHead {
+            margin-top: 8px;
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        .mainBody {
+            padding: 30px 50px;
+            background-color: var(--mainBodyBg);
+            border-top: 2px solid #324a82;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .heroText {
+            font-size: 24px;
+            color: var(--text);
+            font-weight: 800;
+            border-left: 5px solid var(--accent);
+            padding-left: 10px;
+        }
+
+        .heroText.next {
+            margin-top: 20px;
+        }
+
+        /* Cards */
+        .panel {
+            background-color: var(--mainCard);
+            border: 1px solid var(--borderCard);
+            border-radius: 10px;
+            padding: 12px;
+        }
+
+        .headCard {
+            margin-bottom: 6px;
+            font-weight: 700;
+            font-size: 20px;
+            color: var(--accent);
+        }
+
+        .normalText {
+            font-size: 15px;
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        .headTextSlide {
+            margin-top: 10px;
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text);
+            line-height: 1.5;
+            text-align: center;
+        }
+
+        .normalTextSlide {
+            margin-top: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            line-height: 1.5;
+            text-align: center;
+        }
+
+        .list1 {
+            margin-top: 10px;
+            padding-left: 22px;
+        }
+
+        .list1 li {
+            margin-bottom: 6px;
+        }
+
+        .cite {
+            font-size: 12px;
+            color: var(--accent);
+            white-space: nowrap;
+        }
+
+        .panel a,
+        .panel a:visited {
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .panel a:hover {
+            color: var(--accent);
+            text-decoration: underline;
+        }
+
+        /* Slide show */
+        .slide {
+            display: none;
+            min-height: 72px;
+        }
+
+        .slide .normalText {
+            min-height: 48px;
+            line-height: 24px;
+        }
+
+        .stepNo {
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+
+        .dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #475569;
+            cursor: pointer;
+        }
+
+        .dot.active {
+            background: #2196F3;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 44px 1fr 44px;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .controls button {
+            width: 44px;
+            height: 44px;
+            border: 1px solid var(--borderCard);
+            border-radius: 50%;
+            background: var(--mainCard);
+            color: var(--text);
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .controls button:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        .controls button:first-child {
+            justify-self: start;
+        }
+
+        .controls button:last-child {
+            justify-self: end;
+        }
+
+        a#citeImage {
+            display: block;
+            width: 100%;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        a#citeImage:visited {
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        a#citeImage:hover {
+            color: var(--accent);
+            text-decoration: underline;
+        }
+
+        /* ===== Simulator ===== */
+        .simTabs {
+            display: flex;
+            gap: 8px;
+            margin: 12px 0;
+            flex-wrap: wrap;
+        }
+
+        .simTabs button,
+        .simBtn {
+            background: var(--mainBodyBg);
+            color: var(--text);
+            border: 1px solid var(--borderCard);
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .simTabs button.active,
+        .simBtn.primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #082f49;
+        }
+
+        .simBtn:disabled,
+        .simInput:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .simGrid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .simBox {
+            background: var(--mainBodyBg);
+            border: 1px solid var(--borderCard);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .simGrid .simBox {
+            margin-bottom: 0;
+        }
+
+        .simBox h4 {
+            color: var(--accent);
+            font-size: 15px;
+            margin-bottom: 8px;
+        }
+
+        .simSmall {
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .simValue {
+            font-size: 13px;
+            color: var(--text);
+            margin-top: 4px;
+            word-break: break-all;
+        }
+
+        .simError {
+            color: var(--bad);
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.4;
+            margin: 6px 0;
+        }
+
+        .loginError {
+            padding: 8px 10px;
+            border: 1px solid var(--bad);
+            border-radius: 6px;
+            background: rgba(248, 113, 113, 0.08);
+        }
+
+        .mono {
+            font-family: ui-monospace, Consolas, monospace;
+        }
+
+        .simRow {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 8px 0;
+        }
+
+        .simInput,
+        .simSelect {
+            background: var(--mainCard);
+            color: var(--text);
+            border: 1px solid var(--borderCard);
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 14px;
+        }
+
+        .passwordField {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .passwordField .simInput {
+            padding-right: 82px;
+        }
+
+        .passwordToggle {
+            position: absolute;
+            right: 6px;
+            height: 28px;
+            border: 1px solid var(--borderCard);
+            border-radius: 5px;
+            background: #334155;
+            color: var(--text);
+            padding: 0 8px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .simToggles {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 8px 16px;
+            margin-bottom: 8px;
+        }
+
+        .simToggle {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            font-size: 14px;
+            color: var(--text);
+            line-height: 1.4;
+        }
+
+        .simToggle input {
+            margin-top: 3px;
+        }
+
+        .simToggle small {
+            display: block;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .attackStepList {
+            margin: 8px 0 0;
+            padding-left: 22px;
+            color: var(--text);
+        }
+
+        .attackStepList li {
+            margin-bottom: 8px;
+            line-height: 1.45;
+        }
+
+        .attackStepList li.current {
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .attackStepList li.done {
+            color: var(--ok);
+        }
+
+        .simLog {
+            max-height: 300px;
+            overflow: auto;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .l-info {
+            color: var(--text);
+        }
+
+        .l-ok {
+            color: var(--ok);
+        }
+
+        .l-bad {
+            color: var(--bad);
+        }
+
+        .l-warn {
+            color: var(--warn);
+        }
+
+        .simTable {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            color: var(--text);
+        }
+
+        .simTable th,
+        .simTable td {
+            text-align: left;
+            padding: 6px 8px;
+            border-bottom: 1px solid var(--borderCard);
+            vertical-align: top;
+        }
+
+        .simTable th {
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        @media (max-width: 800px) {
+            .simGrid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .mainBody {
+                padding: 24px 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="hero">
+        <h1>Konsep Manajemen Sesi Terautentikasi</h1>
+        <p class="subHead1">Web interaktif pengenalan Manajemen Sesi</p>
+        <p class="subHead">Joel Christopher Gerald Tjokrowiharjo - Kelompok 7 - 0706012410018</p>
+    </div>
+
+    <div class="mainBody">
+
+        <!-- 1. PENGENALAN TOPIK -->
+        <p class="heroText">1. Pengenalan Topik</p>
+
+        <div class="panel">
+            <p class="headCard">Definisi</p>
+            <p class="normalText">Manajemen sesi adalah mekanisme yang memungkinkan server mengingat pengguna tanpa
+                autentikasi berulang. Jika manajemen sesi ini salah konfigurasi, penyerang dapat memakainya untuk
+                menyamar sebagai pengguna. <span class="cite">[1]</span></p>
+        </div>
+
+        <div class="panel">
+            <p class="headCard">Mengapa Penting?</p>
+            <p class="normalText">Session ID yang sudah terautentikasi setara dengan kredensial login. Jika bocor,
+                penyerang dapat mengambil alih akun tanpa login maupun multi-factor authentication (MFA).
+                <span class="cite">[4]</span>
+            </p>
+            <p class="normalText" style="margin-top:8px">Kegagalan autentikasi, termasuk kelemahan sesi, berada di
+                <b>peringkat ke-7 pada OWASP Top 10 2025</b>. Hal ini meliputi ID sesi yang muncul di URL, penggunaan
+                sesi yang sama waktu login dan tidak meng-invalidasi sesi saat <i>logout</i> ataupun <i>timeout</i>
+                <span class="cite">[5]</span>
+            </p>
+        </div>
+
+        <div class="panel">
+            <p class="headCard">Tujuan Belajar</p>
+            <p class="normalText">Melalui materi ini, diharapkan dapat memahami:</p>
+            <ol class="list1 normalText">
+                <li>Bagaimana sebuah sesi dibuat di sebuah aplikasi.</li>
+                <li>Contoh penerapan manajemen sesi.</li>
+                <li>Cara kerja manajemen sesi terautentikasi secara nyata melalui simulator.</li>
+                <li>Cara mencegah, memperbaiki, dan praktik keamanan yang direkomendasikan.</li>
+            </ol>
+        </div>
+
+        <p class="heroText next">2. Penjelasan Konsep</p>
+
+        <div class="panel">
+            <p class="headCard">Kenapa Dibutuhkan?</p>
+            <p class="normalText">Web mengirim data (teks, gambar, video) antara tampilan dan server menggunakan
+                HTTP. HTTP bersifat <i>stateless</i>: server tidak mengingat interaksi sebelumnya, sehingga tanpa
+                manajemen sesi pengguna harus login ulang di setiap halaman. Maka dari itu, diciptakannya <b>Manajemen
+                    Sesi </b><span class="cite">[2]</span></p>
+        </div>
+
+        <div class="panel">
+            <p class="headCard">Cara Kerja</p>
+            <p class="normalText">Kinerja dari sebuah sesi dimulai pada saat login.</p>
+            <ol class="list1 normalText">
+                <li>Saat pengguna login berhasil, server membuat Session ID yang unik. Session ID ini hanya pengenal;
+                    data
+                    pengguna tetap disimpan di server. <span class="cite">[4]</span></li>
+                <li>Front-end (Browser) menyimpan Session ID dan mengirimkannya pada setiap request, sehingga pengguna
+                    tidak perlu
+                    login lagi sampai logout.</li>
+                <li>Sesi berakhir otomatis jika tidak aktif dalam waktu tertentu (idle timeout) atau sudah aktif
+                    terlalu lama (absolute timeout), untuk mencegah penyalahgunaan sesi yang ditinggalkan.
+                    <span class="cite">[4]</span>
+                </li>
+            </ol>
+            <img src="https://hazelcast.com/wp-content/uploads/2024/12/diagram-web-session-1.svg"
+                alt="How Session Work Diagram">
+            <a id="citeImage" href="https://hazelcast.com/foundations/caching/web-session/">Diagram Alur Sesi
+                Terautentikasi</a>
+        </div>
+
+        <div class="panel">
+            <p class="headCard">Komponen dan Teknologi</p>
+            <ol class="list1 normalText">
+                <li><b>Session ID:</b> pengenal acak yang menandai status autentikasi pengguna. Minimal berentropi 64
+                    bit dan tidak mengandung informasi pengguna. <span class="cite">[3][4]</span></li>
+                <li><b>Session Lifetime:</b> lama sesi boleh aktif sebelum pengguna harus autentikasi lagi.</li>
+                <li><b>Cookie:</b> file kecil di browser yang menyimpan Session ID.</li>
+                <li><b>Web Server:</b> membuat dan memverifikasi Session ID. Mode <i>permissive</i> menerima Session
+                    ID apa pun dari pengguna dan langsung membuat sesi dengannya; mode <i>strict</i> hanya menerima ID
+                    yang dibuat server sendiri. <span class="cite">[4]</span></li>
+                <li><b>Client:</b> mengirim request dan menyimpan Session ID yang aktif.</li>
+                <li><b>HTTP:</b> protokol komunikasi klien-server yang tidak menyimpan state.</li>
+            </ol>
+        </div>
+
+        <div class="panel">
+            <p class="headCard">Contoh Implementasi</p>
+            <p class="normalText">Bahasa pemrograman berbasis web juga memiliki sistem manajemen sesinya bawaannya
+                seperti PHP, J2EE, ASP .NET, dan lain lain.
+                <br>OWASP menyarankan memakai manajemen sesi bawaan framework dan bahasa pemrograman versi terbaru <span
+                    class="cite">[4]</span> <br><br>Tiga aspek penerapannya:
+            </p>
+            <ol class="list1 normalText">
+                <li><b>Server-Side Session Token Storage:</b> server menyimpan informasi sesi yang terkait dengan
+                    suatu Session ID.</li>
+                <li><b>Used vs Accepted Session ID Exchange Mechanism:</b> membedakan mekanisme pengiriman Session ID
+                    (Used) dan penerimaannya (Accepted). Setelah login, server mengirim Session ID melalui cookie.
+                    Pada request berikutnya, server hanya menerima Session ID dari cookie dan menolak cara lain,
+                    misalnya parameter URL.</li>
+                <li><b>Transport Layer Security (HTTPS/TLS):</b> mengenkripsi komunikasi klien-server untuk
+                    melindungi Session ID.</li>
+            </ol>
+        </div>
+
+        <div class="panel">
+            <p class="headCard">Ancaman &amp; Risiko</p>
+            <ol class="list1 normalText">
+                <li><b>Session Hijacking:</b> penyerang memakai Session ID valid yang dicuri atau ditebak untuk
+                    menyamar sebagai pengguna. Ini mungkin terjadi karena autentikasi hanya dilakukan saat login.
+                    <span class="cite">[6]</span>
+                </li>
+                <li><b>Session Sniffing:</b> penyerang menyadap jaringan untuk membaca Session ID atau cookie yang
+                    dikirim tanpa enkripsi. <span class="cite">[6]</span></li>
+                <li><b>Man-in-the-Middle:</b> berbeda dengan sniffing, penyerang berada di antara klien dan server
+                    sehingga dapat membaca dan mengubah komunikasi untuk mendapatkan Session ID. <span
+                        class="cite">[6]</span></li>
+                <li><b>Session Fixation:</b> penyerang menanamkan Session ID yang sudah ia ketahui pada sebuah link
+                    dan meminta korban login lewat link tersebut, sehingga ID itu terikat dengan akun korban.
+                    Serangan berhasil jika server tidak membuat Session ID baru setelah login. <span
+                        class="cite">[6]</span>
+                </li>
+                <li><b>XSS:</b> penyerang menjalankan JavaScript di browser korban. Berbahaya jika token (misalnya
+                    JWT) disimpan di localStorage atau sessionStorage karena dapat dibaca oleh skrip.
+                    <span class="cite">[6]</span>
+                </li>
+            </ol>
+        </div>
+
+        <!-- 3. STEP BY STEP -->
+        <p class="heroText next">3. Proses di Simulator</p>
+
+        <div class="panel">
+            <div class="slide">
+                <p class="stepNo">Langkah 1</p>
+                <p class="headTextSlide">Autentikasi dan login.</p> 
+                <p class="normalTextSlide">Masukkan kredensial berikut disimulator:<br>
+                    username: userSiswa & password: user1234.
+                </p>
+            </div>
+            <div class="slide">
+                <p class="stepNo">Langkah 2</p>
+                <p class="headTextSlide">Pasca Login</p>
+                <p class="normalTextSlide">Setelah login, anda dapat melihat Browser Korban dan Server terisi
+                    Anda dapat membuat akun logout, ekspirasikan sesi ataupun membuka halaman terproteksi
+                </p>
+            </div>
+            <div class="slide">
+                <p class="stepNo">Langkah 3</p>
+                <p class="headTextSlide">Konfigurasi Keamanan</p>
+                <p class="normalTextSlide">Tentukan jenis pertahanan yang ingin dinyalakan sebelum penyerangan dilakukan dengan menekan box dibagian "Pengaturan Keamanan Server"</p>
+            </div>
+            <div class="slide">
+                <p class="stepNo">Langkah 4</p>
+                <p class="headTextSlide">Konfigurasi Penyerangan</p>
+                <p class="normalTextSlide">Tentukan jenis penyerangan yang ingin dilakukan, bisa berupa XSS, sniffing, fixation, dll.</p>
+            </div>
+            <div class="slide">
+                <p class="stepNo">Langkah 5</p>
+                <p class="headTextSlide">Proses Penyerangan</p>
+                <p class="normalTextSlide">Tekan "Langkat Berikutnya" untuk melihat proses penyerangan secara berurut. Untuk melihat prosesnya lebih detail, anda bisa melihat di panel "Log Kejadian"</p>
+            </div>
+            <div class="slide">
+                <p class="stepNo">Langkah 6</p>
+                <p class="headTextSlide">Pengulangan Penyerangan</p>
+                <p class="normalTextSlide">Apabila langkah penyerangan telah selesai, anda dapat menekan "Ulangi" dan kembali ke tab "Alur Normal & Pertahanan" dan kembali ke langkah 1</p>
+            </div>
+
+            <div class="controls">
+                <button onclick="prevSlide()" aria-label="Sebelumnya">❮</button>
+                <div class="dots">
+                    <span class="dot" onclick="currentSlide(1)"></span>
+                    <span class="dot" onclick="currentSlide(2)"></span>
+                    <span class="dot" onclick="currentSlide(3)"></span>
+                    <span class="dot" onclick="currentSlide(4)"></span>
+                    <span class="dot" onclick="currentSlide(5)"></span>
+                    <span class="dot" onclick="currentSlide(6)"></span>
+                </div>
+                <button onclick="nextSlide()" aria-label="Berikutnya">❯</button>
+            </div>
+        </div>
+
+        <!-- 4. SIMULATOR -->
+        <p class="heroText next">4. Simulator</p>
+
+        <div class="panel" id="simulator">
+            <p class="headCard">Simulator Manajemen Sesi</p>
+            <p class="normalText">Coba sendiri bagaimana sesi dibuat, dicuri, dan dilindungi. Semua berjalan di halaman
+                ini dengan server palsu di JavaScript, tanpa jaringan atau serangan sungguhan.</p>
+
+            <div class="simTabs">
+                <button id="tabNormal" class="active">1. Alur Normal & Pertahanan</button>
+                <button id="tabAttack">2. Serangan</button>
+            </div>
+
+            <!-- Tiga pihak: korban, server, penyerang -->
+            <div class="simGrid">
+                <div class="simBox">
+                    <h4>Browser Korban</h4>
+                    <p class="simSmall">Cookie sesi:</p>
+                    <p class="mono simValue" id="simCookie">(kosong)</p>
+                </div>
+                <div class="simBox">
+                    <h4>Server</h4>
+                    <p class="simSmall" id="simClock"></p>
+                    <div id="simSessions"></div>
+                </div>
+                <div class="simBox">
+                    <h4>Penyerang</h4>
+                    <p class="simSmall">Session ID yang dimiliki:</p>
+                    <p class="mono simValue" id="simAttackerSid">(belum ada)</p>
+                    <p class="simError" id="attackerError" hidden></p>
+                </div>
+            </div>
+
+            <!-- Kontrol mode Alur Normal -->
+            <div class="simBox" id="ctrlNormal">
+                <h4>Kontrol Korban</h4>
+                <p class="simError loginError" id="loginError" role="alert" hidden></p>
+                <div class="simRow">
+                    <input id="simUser" class="simInput" placeholder="username" autocomplete="off">
+                    <div class="passwordField">
+                        <input id="simPass" class="simInput" type="password" placeholder="password" autocomplete="off">
+                        <button type="button" class="passwordToggle" id="togglePassword"
+                            aria-label="Tampilkan password" aria-controls="simPass" aria-pressed="false">Tampilkan</button>
+                    </div>
+                </div>
+                <p class="simSmall">Kredensial: userSiswa / user1234</p>
+                <div class="simRow">
+                    <button class="simBtn primary" id="btnLogin">Login</button>
+                    <button class="simBtn" id="btnAccess" title="Kirimi cookie sesi ke server untuk membuka halaman terproteksi">Buka halaman terproteksi</button>
+                    <button class="simBtn" id="btnLogout">Logout</button>
+                    <button class="simBtn" id="btnExpire" title="Lewati 31 menit untuk menguji idle timeout">Expired Session</button>
+                    <button class="simBtn" id="btnResetNormal">Ulangi</button>
+                </div>
+            </div>
+
+            <!-- Kontrol mode Serangan -->
+            <div class="simBox" id="ctrlAttack" hidden>
+                <h4>Pilih Skenario Serangan</h4>
+                <div class="simRow">
+                    <select id="simAttack" class="simSelect">
+                        <option value="xss">XSS: mencuri cookie lewat skrip</option>
+                        <option value="sniff">Sniffing: menyadap Wi-Fi publik</option>
+                        <option value="fixation">Session Fixation: menanam Session ID</option>
+                        <option value="logout">Memakai ulang SID setelah logout</option>
+                        <option value="idle">Memakai ulang SID setelah sesi idle</option>
+                    </select>
+                </div>
+                <p class="simSmall" id="simNextHint"></p>
+                <div class="simRow">
+                    <button class="simBtn primary" id="btnNext">Langkah berikutnya</button>
+                    <button class="simBtn" id="btnRunAll">Jalankan semua</button>
+                    <button class="simBtn" id="btnResetAttack">Ulangi</button>
+                </div>
+            </div>
+
+            <!-- Pengaturan dan langkah, dipisahkan berdasarkan tab -->
+            <div class="simBox" id="securitySettings">
+                <h4>Pengaturan Keamanan Server (tindakan pencegahan)</h4>
+                <div class="simToggles">
+                    <label class="simToggle"><input type="checkbox" id="set_httpOnly"><span>HttpOnly<small>JavaScript tidak
+                                bisa membaca cookie.</small></span></label>
+                    <label class="simToggle"><input type="checkbox" id="set_https"><span>HTTPS + atribut Secure<small>Cookie
+                                hanya dikirim lewat koneksi terenkripsi.</small></span></label>
+                    <label class="simToggle"><input type="checkbox" id="set_sameSite"><span>SameSite<small>Cookie tidak
+                                ikut terkirim pada request lintas situs (melawan CSRF).</small></span></label>
+                    <label class="simToggle"><input type="checkbox" id="set_idleTimeout"><span>Idle timeout 30
+                            menit<small>Sesi yang tidak aktif otomatis kedaluwarsa.</small></span></label>
+                    <label class="simToggle"><input type="checkbox" id="set_regenerate"><span>Session ID baru setelah
+                            login<small>ID sebelum login tidak dipakai lagi.</small></span></label>
+                    <label class="simToggle"><input type="checkbox" id="set_invalidateLogout"><span>Hapus sesi di server
+                            saat logout<small>Bukan hanya menghapus cookie di browser.</small></span></label>
+                    <label class="simToggle"><input type="checkbox" id="set_cookieOnly"><span>Terima Session ID hanya
+                            dari cookie<small>Used = Accepted: ID dari URL ditolak.</small></span></label>
+                </div>
+                <div class="simRow">
+                    <button class="simBtn" id="btnAllOff">Matikan semua (rentan)</button>
+                    <button class="simBtn" id="btnAllOn">Aktifkan semua (aman)</button>
+                </div>
+            </div>
+
+            <div class="simBox" id="attackSteps" hidden>
+                <h4>Langkah Skenario Serangan</h4>
+                <p class="simSmall">Urutan proses serangan yang sedang dipilih:</p>
+                <ol class="attackStepList" id="attackStepList"></ol>
+                <p class="simSmall" id="attackDefense"></p>
+            </div>
+
+            <!-- Log -->
+            <div class="simBox">
+                <h4>Log Kejadian</h4>
+                <div class="simLog mono" id="simLog"></div>
+            </div>
+
+            <!-- Evaluasi (hanya mode serangan) -->
+            <div class="simBox" id="boxEval" hidden>
+                <h4>Hasil &amp; Evaluasi</h4>
+                <div id="simEval"></div>
+            </div>
+        </div>
+
+        <!-- 5. COUNTERMEASURES -->
+        <p class="heroText next">5. Pencegahan, Perbaikan &amp; Rekomendasi</p>
+
+        <div class="panel">
+            <p class="headCard">Pencegahan</p>
+            <ol class="list1 normalText">
+                <li>Gunakan atribut HttpOnly, SameSite, dan Secure pada cookie.</li>
+                <li>Kirim cookie autentikasi hanya melalui HTTPS.</li>
+                <li>Terapkan defense-in-depth: beberapa lapis perlindungan yang bekerja bersama.</li>
+                <li>Beri batas waktu sesi yang tepat (tidak terlalu lama dan tidak terlalu singkat).</li>
+                <li>Gunakan Session ID yang panjang dan berentropi cukup.</li>
+            </ol>
+        </div>
+
+        <div class="panel">
+            <p class="headCard">Perbaikan</p>
+            <ol class="list1 normalText">
+                <li>Buat Session ID <b>baru</b> setelah login (mencegah Session Fixation) dan edukasi pengguna
+                    tentang link serta pesan phishing.</li>
+                <li>Gunakan koneksi terenkripsi dengan HSTS (membantu mencegah Man-in-the-Middle dan Session
+                    Sniffing).</li>
+            </ol>
+        </div>
+
+        <div class="panel">
+            <p class="headCard">Rekomendasi OWASP</p>
+            <ol class="list1 normalText">
+                <li>Jika harus membuat Session ID sendiri, gunakan CSPRNG (pembangkit angka acak semu yang aman
+                    secara kriptografi) dengan ukuran minimal 128 bit, dan pastikan setiap ID unik.
+                    <span class="cite">[4]</span>
+                </li>
+                <li>Jangan simpan token sesi di localStorage atau sessionStorage. <span class="cite">[4]</span></li>
+            </ol>
+        </div>
+
+        <!-- REFERENSI -->
+        <p class="heroText next">Referensi</p>
+
+        <div class="panel">
+            <ol class="list1 normalText">
+                <li><a href="https://portswigger.net/burp/documentation/desktop/testing-workflow/vulnerabilities/session-management"
+                        target="_blank" rel="noopener">PortSwigger. <i>Session Management Vulnerabilities</i>.</a>
+                    Diakses 22 November 2026.</li>
+                <li><a href="https://adaptistconsulting.com/id/blog/apa-itu-session-management-pengertian-dan-cara-kerjanya/"
+                        target="_blank" rel="noopener">Adaptist Consulting. <i>Apa Itu Session Management? Pengertian
+                            dan Cara Kerjanya</i>.</a> Diakses 22 November 2026.</li>
+                <li><a href="https://developer.mozilla.org/en-US/docs/Web/Security/Authentication/Session_management#session_id_values"
+                        target="_blank" rel="noopener">MDN Web Docs. <i>Session Management: Session ID Values</i>.</a>
+                    Diakses 22 November 2026.</li>
+                <li><a href="https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html"
+                        target="_blank" rel="noopener">OWASP. <i>Session Management Cheat Sheet</i>.</a> Diakses 22
+                    November 2026.</li>
+                <li><a href="https://top10.owasp.org/2025/A07_2025-Authentication_Failures/" target="_blank"
+                        rel="noopener">OWASP. <i>OWASP Top 10 2025 - A07: Authentication Failures</i>.</a> Diakses 22
+                    November 2026.</li>
+                <li>EC-Council. <i>Ethical Hacking Essentials Version 2</i> (eCourseware), hlm. 494, 499-500, 505-506,
+                    dan 509.</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Slideshow Langkah 1-6 -->
+    <script>
+        let slideIndex = 1;
+        showSlide(slideIndex);
+
+        function showSlide(n) {
+            const slides = document.getElementsByClassName("slide");
+            const dots = document.getElementsByClassName("dot");
+
+            slideIndex = Math.max(1, Math.min(n, slides.length));
+
+            for (let i = 0; i < slides.length; i++) slides[i].style.display = "none";
+            for (let i = 0; i < dots.length; i++) dots[i].classList.remove("active");
+
+            slides[slideIndex - 1].style.display = "block";
+            dots[slideIndex - 1].classList.add("active");
+
+            document.querySelector(".controls button:first-child").disabled = slideIndex === 1;
+            document.querySelector(".controls button:last-child").disabled = slideIndex === slides.length;
+        }
+
+        function nextSlide() {
+            showSlide(slideIndex + 1);
+        }
+
+        function prevSlide() {
+            showSlide(slideIndex - 1);
+        }
+
+        function currentSlide(n) {
+            showSlide(n);
+        }
+    </script>
+
+    <!-- Simulator -->
+    <script>
+        (function () {
+            // Dibungkus fungsi supaya nama variabelnya tidak bentrok dengan script slideshow.
+            const $ = (id) => document.getElementById(id);
+
+            // ================= DATA DASAR =================
+            const IDLE_LIMIT = 30;                                  // batas idle (menit)
+            const USER = { name: 'userSiswa', pass: 'user1234' };  // akun palsu
+
+            // Pengaturan keamanan server. Semua mati = server rentan.
+            const settings = {
+                httpOnly: false, https: false, sameSite: false, idleTimeout: false,
+                regenerate: false, invalidateLogout: false, cookieOnly: false
+            };
+            const NAMES = {
+                httpOnly: 'HttpOnly',
+                https: 'HTTPS + Secure',
+                sameSite: 'SameSite',
+                idleTimeout: 'Idle timeout',
+                regenerate: 'Session ID baru setelah login',
+                invalidateLogout: 'Hapus sesi saat logout',
+                cookieOnly: 'Terima SID hanya dari cookie'
+            };
+
+            let S;
+            let run;     
+            let mode = 'normal';
+            const results = {};
+
+            function newState() {
+                return {
+                    clock: 0,
+                    sessions: {},
+                    victimCookie: null,
+                    attackerSid: null,
+                    verdict: null,
+                    loginError: null,
+                    log: []
+                };
+            }
+
+            // Session ID acak 128 bit (32 karakter hex) dari CSPRNG browser
+            function randomSid() {
+                const a = new Uint8Array(16);
+                window.crypto.getRandomValues(a);
+                return Array.from(a, (b) => b.toString(16).padStart(2, '0')).join('');
+            }
+            function short(sid) { return sid.slice(0, 8) + '…'; }
+            function say(kind, text) { S.log.push({ kind: kind, t: S.clock, text: text }); }
+
+            function cookieHeader(sid) {
+                let h = 'sid=' + short(sid) + '; Path=/';
+                if (settings.httpOnly) h += '; HttpOnly';
+                if (settings.https) h += '; Secure';
+                if (settings.sameSite) h += '; SameSite=Strict';
+                return h;
+            }
+
+            // ================= SERVER PALSU =================
+            // Pengunjung baru mendapat sesi "anonim" (belum login)
+            function serverIssueAnon() {
+                const sid = randomSid();
+                S.sessions[sid] = { user: null, auth: false, lastActive: S.clock };
+                return sid;
+            }
+
+            // Login. presentedSid = Session ID yang sudah dibawa browser sebelum login (bisa kosong).
+            function serverLogin(user, pass, presentedSid) {
+                if (user !== USER.name || pass !== USER.pass) {
+                    return { ok: false, msg: 'username atau password salah.' };
+                }
+                const existing = presentedSid && S.sessions[presentedSid];
+                if (existing && !settings.regenerate) {
+                    // RENTAN: sesi lama dipakai lagi dan langsung menjadi terautentikasi
+                    existing.auth = true;
+                    existing.user = user;
+                    existing.lastActive = S.clock;
+                    return { ok: true, sid: presentedSid, regenerated: false };
+                }
+                if (existing && settings.regenerate) delete S.sessions[presentedSid];
+                const sid = randomSid();
+                S.sessions[sid] = { user: user, auth: true, lastActive: S.clock };
+                return { ok: true, sid: sid, regenerated: true };
+            }
+
+            // Request ke halaman terproteksi. via = 'cookie' atau 'url'
+            function serverRequest(sid, via) {
+                if (via === 'url' && settings.cookieOnly) {
+                    return { ok: false, why: 'Session ID dari URL ditolak (hanya menerima cookie).' };
+                }
+                const s = S.sessions[sid];
+                if (!s) return { ok: false, why: 'Session ID tidak dikenal atau sudah tidak valid di server.' };
+                if (settings.idleTimeout && S.clock - s.lastActive >= IDLE_LIMIT) {
+                    delete S.sessions[sid];
+                    if (S.victimCookie === sid) {
+                        S.victimCookie = null;
+                    }
+                    return { ok: false, why: 'Sesi kedaluwarsa (tidak aktif lebih dari ' + IDLE_LIMIT + ' menit).' };
+                }
+                if (!s.auth) return { ok: false, why: 'Sesi ada, tetapi belum login.' };
+                s.lastActive = S.clock;
+                return { ok: true, user: s.user };
+            }
+
+            // ================= AKSI KORBAN =================
+            function victimLogin() {
+                if (!S.victimCookie || !S.sessions[S.victimCookie]) {
+                    say('bad', 'Korban belum login. Tidak ada cookie sesi yang dapat digunakan untuk login.');
+                    S.verdict = false;
+                    return;
+                }
+                const r = serverLogin(USER.name, USER.pass, S.victimCookie);
+                if (!r.ok) {
+                    S.verdict = false;
+                    say('bad', 'Login korban gagal: ' + r.msg);
+                    return;
+                }
+                S.victimCookie = r.sid;
+                say('info', 'Korban login sebagai ' + USER.name + '. Server menyimpan sesi dan mengirim Set-Cookie: ' + cookieHeader(r.sid));
+            }
+
+            function victimLogout() {
+                if (settings.invalidateLogout) {
+                    delete S.sessions[S.victimCookie];
+                    say('ok', 'Korban logout. Server menghapus sesi dari penyimpanan, jadi SID lama tidak berlaku lagi.');
+                } else {
+                    say('warn', 'Korban logout. Hanya cookie di browser yang dihapus; sesi di server MASIH hidup.');
+                }
+                S.victimCookie = null;
+            }
+
+            function attackerTry() {
+                if (!S.attackerSid) {
+                    say('ok', 'Penyerang tidak punya Session ID, jadi tidak ada yang bisa dicoba. Serangan GAGAL.');
+                    S.verdict = false;
+                    return;
+                }
+                say('warn', 'Penyerang mengirim request ke halaman terproteksi dengan SID ' + short(S.attackerSid) + '.');
+                const r = serverRequest(S.attackerSid, 'cookie');
+                if (r.ok) {
+                    say('bad', 'Server menjawab 200 OK: penyerang melihat halaman milik ' + r.user + '. Serangan BERHASIL.');
+                    S.verdict = true;
+                } else {
+                    say('ok', 'Server menolak: ' + r.why + ' Serangan GAGAL.');
+                    S.verdict = false;
+                }
+            }
+
+            // ================= MODE ALUR NORMAL =================
+            function normalLogin() {
+                const u = $('simUser').value.trim();
+                const p = $('simPass').value;
+                say('info', 'Browser mengirim username dan password ke server.');
+                const r = serverLogin(u, p, S.victimCookie);
+                if (!r.ok) {
+                    S.loginError = 'Login gagal: ' + r.msg;
+                    say('bad', 'Login gagal: ' + r.msg);
+                    return;
+                }
+                S.victimCookie = r.sid;
+                S.loginError = null;
+                say('ok', 'Server memverifikasi kredensial: valid.');
+                say('info', r.regenerated
+                    ? 'Server membuat Session ID baru ' + short(r.sid) + ' dan menyimpan informasi sesi di server.'
+                    : 'Server memakai ulang Session ID lama ' + short(r.sid) + ' (tanpa regenerasi).');
+                say('info', 'Server mengirim Set-Cookie: ' + cookieHeader(r.sid));
+            }
+
+            function normalAccess() {
+                if (!S.victimCookie) {
+                    say('warn', 'Browser tidak punya cookie sesi, request dikirim tanpa Session ID.');
+                    say('bad', '401: harus login dulu.');
+                    return;
+                }
+                say('info', 'Browser mengirim request dengan cookie sid=' + short(S.victimCookie) + '.');
+                const r = serverRequest(S.victimCookie, 'cookie');
+                if (r.ok) say('ok', '200 OK: halaman terproteksi ditampilkan untuk ' + r.user + ' tanpa login ulang.');
+                else say('bad', '401: ' + r.why + ' Pengguna harus login lagi.');
+            }
+
+            function normalLogout() {
+                if (!S.victimCookie) { say('warn', 'Belum ada sesi yang bisa di-logout.'); return; }
+                victimLogout();
+            }
+
+            function normalExpireSession() {
+                if (!S.victimCookie) {
+                    say('warn', 'Tidak ada cookie sesi untuk dijadikan kedaluwarsa.');
+                    return;
+                }
+
+                S.clock += IDLE_LIMIT + 1;
+                if (settings.idleTimeout) {
+                    say('warn', '31 menit tanpa aktivitas. Idle timeout telah tercapai.');
+                } else {
+                    say('info', '31 menit berlalu, tetapi idle timeout sedang tidak aktif.');
+                }
+            }
+
+            // ================= MODE SERANGAN =================
+            // Tiap serangan = daftar langkah. "defs" = pertahanan yang relevan.
+            const attacks = {
+                xss: {
+                    label: 'XSS: mencuri cookie lewat skrip',
+                    defs: ['httpOnly'],
+                    steps: [
+                        { t: 'Korban login', f: victimLogin },
+                        {
+                            t: 'Korban membuka halaman berskrip jahat', f: function () {
+                                say('warn', 'Korban membuka halaman yang disisipi skrip penyerang (XSS). Skrip berjalan di browser korban dan mencoba membaca document.cookie.');
+                            }
+                        },
+                        {
+                            t: 'Skrip membaca cookie', f: function () {
+                                if (settings.httpOnly) {
+                                    say('ok', 'Skrip gagal membaca cookie karena atribut HttpOnly aktif. Penyerang tidak mendapat SID.');
+                                } else {
+                                    S.attackerSid = S.victimCookie;
+                                    say('bad', 'Skrip berhasil membaca cookie dan mengirim SID ' + short(S.attackerSid) + ' ke server penyerang.');
+                                }
+                            }
+                        },
+                        { t: 'Penyerang memakai SID', f: attackerTry }
+                    ]
+                },
+                sniff: {
+                    label: 'Sniffing: menyadap Wi-Fi publik',
+                    defs: ['https'],
+                    steps: [
+                        { t: 'Korban login', f: victimLogin },
+                        {
+                            t: 'Korban memakai Wi-Fi publik', f: function () {
+                                serverRequest(S.victimCookie, 'cookie');
+                                say('info', 'Korban membuka halaman terproteksi lewat Wi-Fi publik. Browser mengirim cookie sesi ke server.');
+                            }
+                        },
+                        {
+                            t: 'Penyerang menyadap jaringan', f: function () {
+                                if (settings.https) {
+                                    say('ok', 'Penyerang menangkap lalu lintas, tetapi isinya terenkripsi (HTTPS). Cookie tidak terbaca.');
+                                } else {
+                                    S.attackerSid = S.victimCookie;
+                                    say('bad', 'Lalu lintas dikirim tanpa enkripsi. Penyerang membaca cookie dan mendapat SID ' + short(S.attackerSid) + '.');
+                                }
+                            }
+                        },
+                        { t: 'Penyerang memakai SID', f: attackerTry }
+                    ]
+                },
+                fixation: {
+                    label: 'Session Fixation: menanam Session ID',
+                    defs: ['cookieOnly', 'regenerate'],
+                    steps: [
+                        {
+                            t: 'Penyerang membuka situs', f: function () {
+                                S.attackerSid = serverIssueAnon();
+                                say('info', 'Penyerang membuka situs. Server memberi SID ' + short(S.attackerSid) + ' (belum login). Penyerang mencatat SID ini.');
+                            }
+                        },
+                        {
+                            t: 'Korban membuka link jebakan', f: function () {
+                                say('warn', 'Penyerang mengirim link ke korban: https://situs.example/login?sid=' + short(S.attackerSid) + '. Korban membuka link tersebut.');
+                                if (settings.cookieOnly) {
+                                    S.victimCookie = serverIssueAnon();
+                                    say('ok', 'Server menolak SID dari URL (hanya menerima cookie) dan memberi korban SID baru ' + short(S.victimCookie) + '.');
+                                } else {
+                                    S.victimCookie = S.attackerSid;
+                                    say('bad', 'Server menerima SID dari URL. Browser korban kini memakai SID milik penyerang.');
+                                }
+                            }
+                        },
+                        {
+                            t: 'Korban login', f: function () {
+                                const r = serverLogin(USER.name, USER.pass, S.victimCookie);
+                                S.victimCookie = r.sid;
+                                say('info', 'Korban memasukkan username dan password lalu login.');
+                                if (r.regenerated) {
+                                    say('ok', 'Server membuat SID baru ' + short(r.sid) + ' setelah login. SID lama tidak dipakai lagi.');
+                                } else if (r.sid === S.attackerSid) {
+                                    say('bad', 'Server memakai SID yang sama setelah login. SID ' + short(r.sid) + ' kini terautentikasi sebagai korban.');
+                                } else {
+                                    say('info', 'Server memakai SID milik korban sendiri, bukan SID penyerang.');
+                                }
+                            }
+                        },
+                        { t: 'Penyerang memakai SID lamanya', f: attackerTry }
+                    ]
+                },
+                logout: {
+                    label: 'Memakai ulang SID setelah logout',
+                    defs: ['invalidateLogout'],
+                    steps: [
+                        { t: 'Korban login', f: victimLogin },
+                        {
+                            t: 'Penyerang memiliki salinan SID', f: function () {
+                                S.attackerSid = S.victimCookie;
+                                say('warn', '(Asumsi simulasi) Penyerang sudah memiliki salinan SID ' + short(S.attackerSid) + ', misalnya dari serangan sebelumnya.');
+                            }
+                        },
+                        { t: 'Korban logout', f: victimLogout },
+                        { t: 'Penyerang memakai SID', f: attackerTry }
+                    ]
+                },
+                idle: {
+                    label: 'Memakai ulang SID setelah sesi idle',
+                    defs: ['idleTimeout'],
+                    steps: [
+                        { t: 'Korban login', f: victimLogin },
+                        {
+                            t: 'Penyerang memiliki salinan SID', f: function () {
+                                S.attackerSid = S.victimCookie;
+                                say('warn', '(Asumsi simulasi) Penyerang sudah memiliki salinan SID ' + short(S.attackerSid) + '.');
+                            }
+                        },
+                        {
+                            t: 'Korban pergi, waktu berlalu', f: function () {
+                                S.clock += 45;
+                                say('info', 'Korban meninggalkan komputer tanpa logout. 45 menit berlalu tanpa aktivitas.');
+                            }
+                        },
+                        { t: 'Penyerang memakai SID', f: attackerTry }
+                    ]
+                }
+            };
+
+            function names(list) { return list.map((k) => NAMES[k]).join(', '); }
+            function currentKey() { return $('simAttack').value; }
+
+            function stepNext() {
+                if (run.done) return;
+                const key = currentKey();
+                const a = attacks[key];
+                if (run.step === 0 && ['xss', 'sniff', 'logout', 'idle'].includes(key)) {
+                    if (!S.victimCookie || !S.sessions[S.victimCookie]) {
+                        say('bad', 'Serangan tidak dapat dimulai: korban belum login dan tidak memiliki cookie sesi.');
+                        S.verdict = false;
+                        finishRun(key, a);
+                        render();
+                        return;
+                    }
+                }
+                a.steps[run.step].f();
+                run.step++;
+                if (run.step >= a.steps.length) finishRun(key, a);
+                render();
+            }
+
+            function finishRun(key, a) {
+                run.done = true;
+                results[key] = { success: S.verdict, snap: JSON.stringify(settings) };
+                if (S.verdict) {
+                    say('warn', 'Pertahanan yang dapat menghentikan serangan ini: ' + names(a.defs) + '.');
+                } else {
+                    const active = a.defs.filter((k) => settings[k]);
+                    say('ok', 'Serangan diblokir oleh: ' + (active.length ? names(active) : 'kondisi sistem') + '.');
+                }
+            }
+
+            function runAll() {
+                while (!run.done) stepNext();
+            }
+
+            // ================= RESET & MODE =================
+            function resetSim() {
+                S = newState();
+                run = { step: 0, done: false };
+                say('info', mode === 'normal'
+                    ? 'Simulator siap. Login dengan userSiswa / user1243, lalu coba buka halaman terproteksi.'
+                    : 'Simulator siap. Pilih skenario serangan, lalu jalankan langkah demi langkah.');
+                render();
+            }
+
+            function changeAttackType() {
+                run = { step: 0, done: false };
+                say('info', 'Skenario diubah menjadi: ' + attacks[currentKey()].label);
+                render();
+            }
+
+            function setMode(m) {
+                mode = m;
+                $('tabNormal').classList.toggle('active', m === 'normal');
+                $('tabAttack').classList.toggle('active', m === 'attack');
+                $('ctrlNormal').hidden = m !== 'normal';
+                $('ctrlAttack').hidden = m !== 'attack';
+                $('boxEval').hidden = m !== 'attack';
+                $('securitySettings').hidden = m !== 'normal';
+                $('attackSteps').hidden = m !== 'attack';
+                render();
+            }
+
+            function renderAttackSteps() {
+                const a = attacks[currentKey()];
+                let h = '';
+                a.steps.forEach((step, index) => {
+                    const status = run.done
+                        ? 'done'
+                        : index < run.step
+                            ? 'done'
+                            : index === run.step
+                                ? 'current'
+                                : '';
+                    h += '<li class="' + status + '">' + step.t + '</li>';
+                });
+                $('attackStepList').innerHTML = h;
+                $('attackDefense').textContent = 'Pertahanan relevan: ' + names(a.defs) + '.';
+            }
+
+            function setAll(value) {
+                Object.keys(settings).forEach((k) => {
+                    settings[k] = value;
+                    $('set_' + k).checked = value;
+                });
+                render();
+            }
+
+            function expireIdleSessions() {
+                if (!settings.idleTimeout) return;
+
+                const expired = [];
+                Object.keys(S.sessions).forEach((sid) => {
+                    const session = S.sessions[sid];
+                    if (S.clock - session.lastActive >= IDLE_LIMIT) {
+                        delete S.sessions[sid];
+                        expired.push(sid);
+                    }
+                });
+
+                if (S.victimCookie && !S.sessions[S.victimCookie]) {
+                    S.victimCookie = null;
+                    say('warn', 'Idle timeout 30 menit tercapai. Cookie sesi korban kedaluwarsa dan dihapus dari browser.');
+                }
+            }
+
+            // ================= TAMPILAN =================
+            function render() {
+                expireIdleSessions();
+                // Cookie korban
+                $('simCookie').textContent = S.victimCookie ? cookieHeader(S.victimCookie) : '(kosong)';
+                const loginError = $('loginError');
+                loginError.textContent = S.loginError || '';
+                loginError.hidden = !S.loginError;
+                // Server: waktu dan tabel sesi
+                $('simClock').textContent = 'Waktu simulasi: T+' + S.clock + ' menit';
+                const sids = Object.keys(S.sessions);
+                if (!sids.length) {
+                    $('simSessions').innerHTML = '<p class="simSmall">(belum ada sesi)</p>';
+                } else {
+                    let h = '<table class="simTable"><tr><th>SID</th><th>Status</th><th>Idle</th></tr>';
+                    sids.forEach((sid) => {
+                        const s = S.sessions[sid];
+                        h += '<tr><td class="mono">' + short(sid) + '</td><td>' +
+                            (s.auth ? 'login (' + s.user + ')' : 'belum login') + '</td><td>' +
+                            (S.clock - s.lastActive) + ' mnt</td></tr>';
+                    });
+                    $('simSessions').innerHTML = h + '</table>';
+                }
+                // Penyerang
+                $('simAttackerSid').textContent = S.attackerSid ? short(S.attackerSid) : '(belum ada)';
+                const attackerError = $('attackerError');
+                const needsLogin = !S.victimCookie && !S.attackerSid;
+                attackerError.textContent = needsLogin ? 'Belum ada cookie sesi. Login korban terlebih dahulu.' : '';
+                attackerError.hidden = !needsLogin;
+                // Log
+                const logEl = $('simLog');
+                logEl.innerHTML = '';
+                S.log.forEach((l) => {
+                    const d = document.createElement('div');
+                    d.className = 'l-' + l.kind;
+                    d.textContent = '[T+' + l.t + '] ' + l.text;
+                    logEl.appendChild(d);
+                });
+                logEl.scrollTop = logEl.scrollHeight;
+
+                // Tombol & kunci pengaturan
+                const locked = mode === 'attack' && run.step > 0 && !run.done;
+                Object.keys(settings).forEach((k) => { $('set_' + k).disabled = locked; });
+                $('btnAllOff').disabled = locked;
+                $('btnAllOn').disabled = locked;
+                $('simAttack').disabled = locked;
+
+                if (mode === 'attack') {
+                    const a = attacks[currentKey()];
+                    $('btnNext').disabled = run.done;
+                    $('btnRunAll').disabled = run.done;
+                    $('simNextHint').textContent = run.done
+                        ? 'Selesai. Ubah pengaturan keamanan lalu tekan "Ulangi" untuk mencoba lagi.'
+                        : 'Langkah ' + (run.step + 1) + ' dari ' + a.steps.length + ': ' + a.steps[run.step].t;
+                    renderAttackSteps();
+                    renderEval();
+                }
+            }
+
+            function renderEval() {
+                const keys = Object.keys(attacks);
+                const tried = keys.filter((k) => results[k]);
+                const blocked = tried.filter((k) => !results[k].success);
+                const now = JSON.stringify(settings);
+
+                let h = '<table class="simTable"><tr><th>Serangan</th><th>Hasil terakhir</th><th>Pertahanan yang relevan</th></tr>';
+                keys.forEach((k) => {
+                    const r = results[k];
+                    let status = '<span class="simSmall">belum dicoba</span>';
+                    if (r) {
+                        status = r.success
+                            ? '<span style="color:var(--bad)">Berhasil (rentan)</span>'
+                            : '<span style="color:var(--ok)">Diblokir</span>';
+                        if (r.snap !== now) status += ' <span class="simSmall">(pengaturan berubah, jalankan ulang)</span>';
+                    }
+                    h += '<tr><td>' + attacks[k].label + '</td><td>' + status + '</td><td>' + names(attacks[k].defs) + '</td></tr>';
+                });
+                h += '</table>';
+                h += '<p class="normalText" style="margin-top:10px">Serangan diblokir: <b>' + blocked.length + '</b> dari <b>' +
+                    keys.length + '</b> (sudah dicoba: ' + tried.length + ').</p>';
+
+                if (tried.length === keys.length && blocked.length === keys.length) {
+                    h += '<p class="normalText" style="margin-top:6px;color:var(--ok)">Semua serangan berhasil diblokir. Setiap pertahanan menutup celah yang berbeda, itulah alasan defense-in-depth dibutuhkan.</p>';
+                } else if (tried.length && blocked.length < tried.length) {
+                    h += '<p class="normalText" style="margin-top:6px;color:var(--warn)">Masih ada serangan yang berhasil. Aktifkan pertahanan yang relevan (lihat tabel), lalu jalankan ulang serangan yang sama dan bandingkan hasilnya.</p>';
+                } else if (!tried.length) {
+                    h += '<p class="normalText" style="margin-top:6px">Coba tiap serangan dengan semua pertahanan mati, lalu aktifkan pertahanan satu per satu.</p>';
+                }
+                h += '<p class="simSmall" style="margin-top:8px">Catatan: SameSite tidak menghentikan pencurian Session ID di simulator ini. Fungsinya mencegah cookie ikut terkirim pada request lintas situs (CSRF).</p>';
+                $('simEval').innerHTML = h;
+            }
+
+            // ================= PASANG EVENT =================
+            $('tabNormal').addEventListener('click', () => setMode('normal'));
+            $('tabAttack').addEventListener('click', () => setMode('attack'));
+
+            $('btnLogin').addEventListener('click', () => { normalLogin(); render(); });
+            $('btnAccess').addEventListener('click', () => { normalAccess(); render(); });
+            $('btnLogout').addEventListener('click', () => { normalLogout(); render(); });
+            $('btnExpire').addEventListener('click', () => { normalExpireSession(); render(); });
+            $('btnResetNormal').addEventListener('click', resetSim);
+            $('togglePassword').addEventListener('click', () => {
+                const password = $('simPass');
+                const button = $('togglePassword');
+                const showPassword = password.type === 'password';
+                password.type = showPassword ? 'text' : 'password';
+                button.textContent = showPassword ? 'Sembunyikan' : 'Tampilkan';
+                button.setAttribute('aria-label', showPassword ? 'Sembunyikan password' : 'Tampilkan password');
+                button.setAttribute('aria-pressed', String(showPassword));
+            });
+            ['simUser', 'simPass'].forEach((id) => {
+                $(id).addEventListener('input', () => {
+                    if (S.loginError) {
+                        S.loginError = null;
+                        render();
+                    }
+                });
+            });
+
+            $('simAttack').addEventListener('change', changeAttackType);
+            $('btnNext').addEventListener('click', stepNext);
+            $('btnRunAll').addEventListener('click', runAll);
+            $('btnResetAttack').addEventListener('click', resetSim);
+
+            Object.keys(settings).forEach((k) => {
+                $('set_' + k).addEventListener('change', () => {
+                    settings[k] = $('set_' + k).checked;
+                    render();
+                });
+            });
+            $('btnAllOff').addEventListener('click', () => setAll(false));
+            $('btnAllOn').addEventListener('click', () => setAll(true));
+
+            resetSim();
+        })();
+    </script>
+</body>
+
+</html>
